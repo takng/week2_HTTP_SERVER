@@ -17,6 +17,21 @@ function generateRandomString() {
 
 }
 
+app.get('/u/:shortURL', (req, res) => {
+//  let longURL = urlDatabase[req.params.shortURL].site;
+  let longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
+
+//  if (req.params.shortURL !== urlDatabase[req.params.shortURL]) {
+ //   res.status(404).render('404', templateVars);
+  };
+});
+
+//app.get("/u/:shortURL", (req, res) => {
+//  let longURL = urlDatabase[shortURL];
+//  res.redirect(longURL);
+//});
+
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
