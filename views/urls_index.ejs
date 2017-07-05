@@ -8,11 +8,14 @@
 
 <h2>Loop</h2>
 <ul>
-    <% urlDatabase.forEach(function(url) { %>
-        <li><%= url.index %> - <%= url.path %></li>
+    <% Object.keys(urls).forEach(function(shortURL) { %>
+        <li><%= shortURL %> - <%= urls[shortURL] %>
+<form method="POST" action="/urls/<%= shortURL %>/delete" style="display: inline;">
+  <button type="submit" class="btn btn-danger">Delete</button>
+        </li>
+</form>
     <% }); %>
 </ul>
 ...
 </body>
 </html>
-
