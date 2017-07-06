@@ -1,0 +1,15 @@
+<header class="jumbotron">
+  <% include ./partials/_header.ejs %>
+
+  <div style="text-align:center;">
+    <h1>Login TinyApp</h1>
+  </div>
+</header>
+
+<form method="POST" action="/login">
+	<input type="email" name="email"  />
+	<input type="password" name="password"  />
+			<br />
+			<button type="submit"  >Login</button>
+
+</form>

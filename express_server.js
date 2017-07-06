@@ -26,33 +26,16 @@ var urlDatabase = {
 };
 
 function generateRandomString() {
+    let random = Math.floor((1 + Math.random()) * 0x1000000).toString(16).substring(1);
+    return random;
+};
 
-}
-
-app.post('/login', (req, res) => {
-  res.cookie("username", req.body.username);
-  console.log(req.body.username);
-  res.redirect("/urls");
-});
-
-/* USER LOGIN/REGISTRATION HANDLERS */
-// registration page
-app.get('/register', (req, res) => {
+app.get('/login', (req, res) => {
   let templateVars = { message: '', stat: res.statusCode };
-
-  if (req.session.user_id) {
-    res.redirect('/urls');
-  } else {
-    res.render('register', templateVars);
-  };
-});
-
-// user registration
-app.post('/register', (req, res) => {
-  let randUserID = generateRandStr();
+  let randUserID = generateRandomString();
   let userEmail = req.body.email;
   let userPass = req.body.password;
-  const hashedPwd = bcrypt.hashSync(userPass, 10);
+  //const hashedPwd = bcrypt.hashSync(userPass, 10);
 
   // validate input
   for (let userID in users) {
@@ -82,6 +65,75 @@ app.post('/register', (req, res) => {
     };
 
     req.session.user_id = users[randUserID].id;
+    //res.cookie("user_id", req.body.username);
+    res.redirect('/');
+  };
+
+
+  // console.log(req.cookies.user_id);
+  // let cookie_user_id = "xyz"
+  // res.cookie("user_id", "xyz");
+  //
+  // if (cookie_user_id) {
+  //   res.redirect('/urls');
+  // } else {
+  //   res.render('login', templateVars);
+  // };
+});
+
+// app.post('/login', (req, res) => {
+//   res.cookie("user_id", req.body.username);
+//   console.log(req.body.username);
+//   res.redirect("/urls");
+// });
+
+// feature/user-registration
+app.get('/register', (req, res) => {
+  let templateVars = { message: '', stat: res.statusCode };
+
+  if (req.session.user_id) {
+    res.redirect('/urls');
+  } else {
+    res.render('register', templateVars);
+  };
+});
+
+// user registration
+app.post('/register', (req, res) => {
+  let randUserID = generateRandomString();
+  let userEmail = req.body.email;
+  let userPass = req.body.password;
+  //const hashedPwd = bcrypt.hashSync(userPass, 10);
+
+  // validate input
+  for (let userID in users) {
+    if (users[userID].email === userEmail) {
+      res.statusCode = 400;
+      let templateVars = {
+        message: 'Oops! That email address is already being used.',
+        stat: res.statusCode
+      };
+      res.render('register', templateVars);
+      return;
+    }
+  };
+
+  if (userEmail === '' || userPass === '') {
+    res.statusCode = 400;
+    let templateVars = {
+      message: `Oops! Please be sure to fill out both fields.`,
+      stat: res.statusCode
+    };
+    res.render('register', templateVars);
+  } else {
+    users[randUserID] = {
+      id: randUserID,
+      email: userEmail,
+      password: hashedPwd
+    };
+
+    req.session.user_id = users[randUserID].id;
+    //res.cookie("user_id", req.body.username);
     res.redirect('/');
   };
 });
@@ -153,7 +205,7 @@ app.get('/', (req, res) => {
   //   res.redirect('/urls');
   // } else {
   let templateVars = { urls: urlDatabase };
-  res.render('urls_index');
+  res.render("urls_index", templateVars);
 //  };
 });
 
