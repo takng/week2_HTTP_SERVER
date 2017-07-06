@@ -7,6 +7,18 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 app.set("view engine", "ejs");
 
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+}
 
 var urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -21,6 +33,57 @@ app.post('/login', (req, res) => {
   res.cookie("username", req.body.username);
   console.log(req.body.username);
   res.redirect("/urls");
+});
+
+/* USER LOGIN/REGISTRATION HANDLERS */
+// registration page
+app.get('/register', (req, res) => {
+  let templateVars = { message: '', stat: res.statusCode };
+
+  if (req.session.user_id) {
+    res.redirect('/urls');
+  } else {
+    res.render('register', templateVars);
+  };
+});
+
+// user registration
+app.post('/register', (req, res) => {
+  let randUserID = generateRandStr();
+  let userEmail = req.body.email;
+  let userPass = req.body.password;
+  const hashedPwd = bcrypt.hashSync(userPass, 10);
+
+  // validate input
+  for (let userID in users) {
+    if (users[userID].email === userEmail) {
+      res.statusCode = 400;
+      let templateVars = {
+        message: 'Oops! That email address is already being used.',
+        stat: res.statusCode
+      };
+      res.render('register', templateVars);
+      return;
+    }
+  };
+
+  if (userEmail === '' || userPass === '') {
+    res.statusCode = 400;
+    let templateVars = {
+      message: `Oops! Please be sure to fill out both fields.`,
+      stat: res.statusCode
+    };
+    res.render('register', templateVars);
+  } else {
+    users[randUserID] = {
+      id: randUserID,
+      email: userEmail,
+      password: hashedPwd
+    };
+
+    req.session.user_id = users[randUserID].id;
+    res.redirect('/');
+  };
 });
 
 app.get('/u/:shortURL', (req, res) => {
