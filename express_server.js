@@ -1,13 +1,17 @@
 var express = require("express");
+
 var app = express();
 var PORT = process.env.PORT || 8080;
 
 const bodyParser = require("body-parser");
+const bcrypt = require('bcrypt');
+const password = "purple-monkey-dinosaur"; // you will probably this from req.params
+const hashed_password = bcrypt.hashSync(password, 10);
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.set("view engine", "ejs");
 
-const users = {
+let users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
@@ -30,12 +34,18 @@ function generateRandomString() {
     return random;
 };
 
-app.get('/login', (req, res) => {
+app.get("/list", (req, res) => {
+  let templateVars = { urls: users };
+  res.render("users_index", templateVars);
+});
+
+app.post('/login', (req, res) => {
   let templateVars = { message: '', stat: res.statusCode };
   let randUserID = generateRandomString();
   let userEmail = req.body.email;
   let userPass = req.body.password;
-  //const hashedPwd = bcrypt.hashSync(userPass, 10);
+userPass  = "purple-monkey-dinosaur"; // you will probably this from req.params
+  const hashedPwd = bcrypt.hashSync(userPass, 10);
 
   // validate input
   for (let userID in users) {
@@ -64,7 +74,59 @@ app.get('/login', (req, res) => {
       password: hashedPwd
     };
 
-    req.session.user_id = users[randUserID].id;
+    //req.session.user_id = users[randUserID].id;
+    //res.cookie("user_id", req.body.username);
+    res.redirect('/');
+  };
+
+
+  // console.log(req.cookies.user_id);
+  // let cookie_user_id = "xyz"
+  // res.cookie("user_id", "xyz");
+  //
+  // if (cookie_user_id) {
+  //   res.redirect('/urls');
+  // } else {
+  //   res.render('login', templateVars);
+  // };
+});
+
+app.get('/login', (req, res) => {
+  let templateVars = { message: '', stat: res.statusCode };
+  let randUserID = generateRandomString();
+  let userEmail = req.body.email;
+  let userPass = req.body.password;
+userPass  = "purple-monkey-dinosaur"; // you will probably this from req.params
+  const hashedPwd = bcrypt.hashSync(userPass, 10);
+
+  // validate input
+  for (let userID in users) {
+    if (users[userID].email === userEmail) {
+      res.statusCode = 400;
+      let templateVars = {
+        message: 'Oops! That email address is already being used.',
+        stat: res.statusCode
+      };
+      res.render('register', templateVars);
+      return;
+    }
+  };
+
+  if (userEmail === '' || userPass === '') {
+    res.statusCode = 400;
+    let templateVars = {
+      message: `Oops! Please be sure to fill out both fields.`,
+      stat: res.statusCode
+    };
+    res.render('register', templateVars);
+  } else {
+    users[randUserID] = {
+      id: randUserID,
+      email: userEmail,
+      password: hashedPwd
+    };
+
+    //req.session.user_id = users[randUserID].id;
     //res.cookie("user_id", req.body.username);
     res.redirect('/');
   };
@@ -91,11 +153,11 @@ app.get('/login', (req, res) => {
 app.get('/register', (req, res) => {
   let templateVars = { message: '', stat: res.statusCode };
 
-  if (req.session.user_id) {
-    res.redirect('/urls');
-  } else {
+//  if (req.session.user_id) {
+//    res.redirect('/urls');
+//  } else {
     res.render('register', templateVars);
-  };
+//  };
 });
 
 // user registration
@@ -103,7 +165,8 @@ app.post('/register', (req, res) => {
   let randUserID = generateRandomString();
   let userEmail = req.body.email;
   let userPass = req.body.password;
-  //const hashedPwd = bcrypt.hashSync(userPass, 10);
+userPass  = "purple-monkey-dinosaur"; // you will probably this from req.params
+  const hashedPwd = bcrypt.hashSync(userPass, 10);
 
   // validate input
   for (let userID in users) {
@@ -134,7 +197,11 @@ app.post('/register', (req, res) => {
 
     req.session.user_id = users[randUserID].id;
     //res.cookie("user_id", req.body.username);
-    res.redirect('/');
+
+    // res.redirect('/');
+
+  let templateVars = { urls: users };
+  res.render("users_index", templateVars);
   };
 });
 
