@@ -21,10 +21,22 @@ let users = {
     id: "user2RandomID",
     email: "user2@example.com",
     password: "dishwasher-funk"
-  }
+  },
+  "user3RandomID": {
+     id: "user3RandomID",
+     email: "user3@example.com",
+     password: "carwasher-funk"
+   },
+   "user4RandomID": {
+      id: "user4RandomID",
+      email: "user4@example.com",
+      password: "washer-funk"
+    }
 }
 
 var urlDatabase = {
+  "b3xVn3": "http://www.lighthouselabs.com",
+  "b4xVn4": "http://www.lighthouselabs.hk",
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
@@ -34,146 +46,103 @@ function generateRandomString() {
     return random;
 };
 
+// deleted cookie upon user logout
+app.post('/logout', (req, res) => {
+  res.clearCookie('user_id');
+  res.redirect('/');
+});
+
+app.get('/login', (req, res) => {
+  let templateVars = { message: '', stat: res.statusCode };
+
+  res.render('login', templateVars);
+
+});
+
 app.get("/list", (req, res) => {
   let templateVars = { urls: users };
   res.render("users_index", templateVars);
 });
 
 app.post('/login', (req, res) => {
-  let templateVars = { message: '', stat: res.statusCode };
-  let randUserID = generateRandomString();
-  let userEmail = req.body.email;
-  let userPass = req.body.password;
-userPass  = "purple-monkey-dinosaur"; // you will probably this from req.params
-  const hashedPwd = bcrypt.hashSync(userPass, 10);
+  let uEmail = req.body.email;
+  let uPassword = req.body.password;
+  let templateVars = {};
+  let found = false;
+  let problem = false;
+  let problemMessage = "";
+  let foundUsersID = "";
 
   // validate input
-  for (let userID in users) {
-    if (users[userID].email === userEmail) {
-      res.statusCode = 400;
-      let templateVars = {
-        message: 'Oops! That email address is already being used.',
-        stat: res.statusCode
-      };
-      res.render('register', templateVars);
-      return;
+  if (!uEmail || !uPassword) {
+    console.log('Empty Input');
+    problemMessage = 'Empty Input';
+    problem = true;
+  } else {
+    for (let usersID in users) {
+      let match = bcrypt.compareSync(uPassword, users[usersID].password);
+      if (uEmail === users[usersID].email && match === true) {
+        console.log('Email and Password match');
+        foundUsersID = usersID;
+        found = true;
+      } else if (uEmail !== users[usersID].email) {
+        console.log('Email doesn\'t match');
+        problemMessage = 'Email doesn\'t match';
+        problem = true;
+      } else if (match !== true && uEmail === users[usersID].email) {
+        console.log('Email matches but bad password');
+        problemMessage = 'Email matches but bad password';
+        problem = true;
+      } else {
+        problem = true;
+        problemMessage = 'User not found'
+      }
     }
-  };
+  }
 
-  if (userEmail === '' || userPass === '') {
-    res.statusCode = 400;
-    let templateVars = {
-      message: `Oops! Please be sure to fill out both fields.`,
+  if (found === true) {
+    templateVars = {
+      message: "",
       stat: res.statusCode
     };
-    res.render('register', templateVars);
+    res.cookie("user_id", foundUsersID);
+    res.redirect('/urls');
+    //return;
   } else {
-    users[randUserID] = {
-      id: randUserID,
-      email: userEmail,
-      password: hashedPwd
+    if (problem === true) {
+        res.statusCode = 403;
+        templateVars = {
+          message: problemMessage,
+          stat: res.statusCode
+        };
+        res.status(403).send(problemMessage);
     };
-
-    //req.session.user_id = users[randUserID].id;
-    //res.cookie("user_id", req.body.username);
-    res.redirect('/');
-  };
-
-
-  // console.log(req.cookies.user_id);
-  // let cookie_user_id = "xyz"
-  // res.cookie("user_id", "xyz");
-  //
-  // if (cookie_user_id) {
-  //   res.redirect('/urls');
-  // } else {
-  //   res.render('login', templateVars);
-  // };
+    res.render('login', templateVars);
+  }
 });
 
-app.get('/login', (req, res) => {
-  let templateVars = { message: '', stat: res.statusCode };
-  let randUserID = generateRandomString();
-  let userEmail = req.body.email;
-  let userPass = req.body.password;
-userPass  = "purple-monkey-dinosaur"; // you will probably this from req.params
-  const hashedPwd = bcrypt.hashSync(userPass, 10);
-
-  // validate input
-  for (let userID in users) {
-    if (users[userID].email === userEmail) {
-      res.statusCode = 400;
-      let templateVars = {
-        message: 'Oops! That email address is already being used.',
-        stat: res.statusCode
-      };
-      res.render('register', templateVars);
-      return;
-    }
-  };
-
-  if (userEmail === '' || userPass === '') {
-    res.statusCode = 400;
-    let templateVars = {
-      message: `Oops! Please be sure to fill out both fields.`,
-      stat: res.statusCode
-    };
-    res.render('register', templateVars);
-  } else {
-    users[randUserID] = {
-      id: randUserID,
-      email: userEmail,
-      password: hashedPwd
-    };
-
-    //req.session.user_id = users[randUserID].id;
-    //res.cookie("user_id", req.body.username);
-    res.redirect('/');
-  };
-
-
-  // console.log(req.cookies.user_id);
-  // let cookie_user_id = "xyz"
-  // res.cookie("user_id", "xyz");
-  //
-  // if (cookie_user_id) {
-  //   res.redirect('/urls');
-  // } else {
-  //   res.render('login', templateVars);
-  // };
-});
-
-// app.post('/login', (req, res) => {
-//   res.cookie("user_id", req.body.username);
-//   console.log(req.body.username);
-//   res.redirect("/urls");
-// });
 
 // feature/user-registration
 app.get('/register', (req, res) => {
   let templateVars = { message: '', stat: res.statusCode };
-
-//  if (req.session.user_id) {
-//    res.redirect('/urls');
-//  } else {
     res.render('register', templateVars);
-//  };
 });
 
 // user registration
 app.post('/register', (req, res) => {
   let randUserID = generateRandomString();
-  let userEmail = req.body.email;
-  let userPass = req.body.password;
-userPass  = "purple-monkey-dinosaur"; // you will probably this from req.params
-  const hashedPwd = bcrypt.hashSync(userPass, 10);
-
+  let uEmail = req.body.email;
+  let uPassword = req.body.password;
+  const hashedPwd = bcrypt.hashSync(uPassword, 10);
+console.log(randUserID);
+console.log(uEmail);
+console.log(uPassword);
   // validate input
   for (let userID in users) {
-    if (users[userID].email === userEmail) {
+    if (users[userID].email === uEmail) {
       res.statusCode = 400;
       let templateVars = {
-        message: 'Oops! That email address is already being used.',
+        message: 'Email used.',
         stat: res.statusCode
       };
       res.render('register', templateVars);
@@ -181,22 +150,21 @@ userPass  = "purple-monkey-dinosaur"; // you will probably this from req.params
     }
   };
 
-  if (userEmail === '' || userPass === '') {
+  if (uEmail === '' || uPassword === '') {
     res.statusCode = 400;
     let templateVars = {
-      message: `Oops! Please be sure to fill out both fields.`,
+      message: "All fields needed",
       stat: res.statusCode
     };
     res.render('register', templateVars);
   } else {
     users[randUserID] = {
       id: randUserID,
-      email: userEmail,
+      email: uEmail,
       password: hashedPwd
     };
 
-    req.session.user_id = users[randUserID].id;
-    //res.cookie("user_id", req.body.username);
+    res.cookie("user_id", users[randUserID].id);
 
     // res.redirect('/');
 
@@ -214,10 +182,11 @@ app.get('/u/:shortURL', (req, res) => {
 //  };
 });
 
-//app.get("/u/:shortURL", (req, res) => {
-//  let longURL = urlDatabase[shortURL];
-//  res.redirect(longURL);
-//});
+app.get("/u/:shortURL", (req, res) => {
+  let longURL = urlDatabase[shortURL];
+  res.redirect(longURL);
+});
+
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id] = req.body.newURL;
   console.log(req.body.newURL);
@@ -259,9 +228,6 @@ app.get("/urls/:id", (req, res) => {
               shortURL: req.params.id,
               longURL: urlDatabase[req.params.id]
     };
-//            }
-    //};
-  //let templateVars = { shortURL: req.params.id };
   res.render("urls_show", templateVars);
 });
 
