@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<!--
-<head>
-  <title>TinyApp</title>
-</head>
--->
+
 
 <header class="jumbotron">
   <% include ./partials/_header.ejs %>
@@ -17,7 +13,7 @@
 <body>
     <!-- Add your EJS code here -->
 
-<h2>Loop</h2>
+<h2>URLs</h2>
 <ul>
     <% Object.keys(urls).forEach(function(shortURL) { %>
         <li><%= shortURL %> - <%= urls[shortURL] %>

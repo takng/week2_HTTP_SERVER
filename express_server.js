@@ -73,7 +73,6 @@ app.post('/login', (req, res) => {
   let problemMessage = "";
   let foundUsersID = "";
 
-  // validate input
   if (!uEmail || !uPassword) {
     console.log('Empty Input');
     problemMessage = 'Empty Input';
@@ -117,7 +116,7 @@ app.post('/login', (req, res) => {
         };
         res.status(403).send(problemMessage);
     };
-    res.render('login', templateVars);
+    //res.render('login', templateVars);
   }
 });
 
@@ -125,52 +124,64 @@ app.post('/login', (req, res) => {
 // feature/user-registration
 app.get('/register', (req, res) => {
   let templateVars = { message: '', stat: res.statusCode };
-    res.render('register', templateVars);
+  res.render('register', templateVars);
 });
 
-// user registration
+
 app.post('/register', (req, res) => {
   let randUserID = generateRandomString();
   let uEmail = req.body.email;
   let uPassword = req.body.password;
+  let templateVars = {};
   const hashedPwd = bcrypt.hashSync(uPassword, 10);
+  let found = false;
+  let problem = false;
+  let problemMessage = "";
+  let foundUsersID = "";
+
 console.log(randUserID);
 console.log(uEmail);
 console.log(uPassword);
-  // validate input
-  for (let userID in users) {
-    if (users[userID].email === uEmail) {
-      res.statusCode = 400;
-      let templateVars = {
-        message: 'Email used.',
-        stat: res.statusCode
-      };
-      res.render('register', templateVars);
-      return;
-    }
-  };
 
-  if (uEmail === '' || uPassword === '') {
-    res.statusCode = 400;
-    let templateVars = {
-      message: "All fields needed",
-      stat: res.statusCode
-    };
-    res.render('register', templateVars);
+  if (!uEmail || !uPassword) {
+    console.log('Empty Input');
+    problemMessage = 'Empty Input';
+    problem = true;
   } else {
-    users[randUserID] = {
-      id: randUserID,
-      email: uEmail,
-      password: hashedPwd
-    };
+    for (let usersID in users) {
+      if (uEmail === users[usersID].email) {
+        console.log('Email already used');
+        //foundUsersID = usersID;
+        problem = true;
+      } else {
+        problem = false;
+      }
+    }
+  }
 
-    res.cookie("user_id", users[randUserID].id);
+  if (problem === false) {
+      res.cookie("user_id", randUserID);
+      //res.cookie("user_id", users[randUserID].id);
+      users[randUserID] = {
+        id: randUserID,
+        email: uEmail,
+        password: hashedPwd
+      };
+      templateVars = { urls: users };
+      res.render("login", templateVars);
+      //return;
+  } else {
+      if (problem === true) {
+          res.statusCode = 400;
+          templateVars = {
+              message: problemMessage,
+            stat: res.statusCode
+          };
+          res.status(400).send(problemMessage);
+      };
+      //res.render('register', templateVars);
+  }
 
-    // res.redirect('/');
-
-  let templateVars = { urls: users };
-  res.render("users_index", templateVars);
-  };
 });
 
 app.get('/u/:shortURL', (req, res) => {
@@ -231,7 +242,7 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-// load main page
+
 app.get('/', (req, res) => {
   // this registers a handler on the ROOT path '/'
   // if (req.session.user_id) {
