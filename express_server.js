@@ -121,7 +121,7 @@ app.post('/login', (req, res) => {
     }
   }
 
-  if (found === true) {
+  if (found) {
     templateVars = {
       message: "",
       stat: res.statusCode
