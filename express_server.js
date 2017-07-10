@@ -31,14 +31,22 @@ let users = {
       id: "user4RandomID",
       email: "user4@example.com",
       password: "washer-funk"
-    }
+   }
 }
 
 var urlDatabase = {
-  "b3xVn3": "http://www.lighthouselabs.com",
-  "b4xVn4": "http://www.lighthouselabs.hk",
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  'b2xVn2': {
+    'longURL': 'http://www.lighthouselabs.ca',
+    'userID': 'user3RandomID'
+  },
+  '9s5xk': {
+    'longURL': 'http://www.google.com',
+    'userID': 'user4RandomID'
+  }
+  // "b3xVn3": "http://www.lighthouselabs.com",
+  // "b4xVn4": "http://www.lighthouselabs.hk",
+  // "b2xVn2": "http://www.lighthouselabs.ca",
+  // "9sm5xK": "http://www.google.com"
 };
 
 function generateRandomString() {
@@ -185,7 +193,7 @@ console.log(uPassword);
 });
 
 app.get('/u/:shortURL', (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
+  let longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 
 //  if (req.params.shortURL !== urlDatabase[req.params.shortURL]) {
@@ -194,12 +202,12 @@ app.get('/u/:shortURL', (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[shortURL];
+  let longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.newURL;
+  urlDatabase[req.params.id].longURL = req.body.newURL;
   console.log(req.body.newURL);
   let templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
@@ -237,7 +245,7 @@ app.get("/urls/:id", (req, res) => {
     //{ urls: {
     {
               shortURL: req.params.id,
-              longURL: urlDatabase[req.params.id]
+              longURL: urlDatabase[req.params.id].longURL
     };
   res.render("urls_show", templateVars);
 });

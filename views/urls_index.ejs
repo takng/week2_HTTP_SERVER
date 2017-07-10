@@ -16,7 +16,7 @@
 <h2>URLs</h2>
 <ul>
     <% Object.keys(urls).forEach(function(shortURL) { %>
-        <li><%= shortURL %> - <%= urls[shortURL] %>
+        <li><%= shortURL %> - <%= urls[shortURL].longURL %>
 <form method="GET" action="/urls/<%= shortURL %>/" style="display: inline;">
   <button type="submit" class="btn btn-danger">Edit</button>
 </form>
