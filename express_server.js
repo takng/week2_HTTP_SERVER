@@ -3,11 +3,18 @@ var express = require("express");
 var app = express();
 var PORT = process.env.PORT || 8080;
 
+const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
 const password = "purple-monkey-dinosaur"; // you will probably this from req.params
 const hashed_password = bcrypt.hashSync(password, 10);
 app.use(bodyParser.urlencoded({extended: true}));
+
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key0'],
+  maxAge: 60 * 60 * 1000
+}));
 
 app.set("view engine", "ejs");
 
@@ -54,9 +61,20 @@ function generateRandomString() {
     return random;
 };
 
+function urlsForUser(thisUser) {
+  const thisURLS = {};
+  for (let shortURL in urlDatabase) {
+    if (thisUser === urlDatabase[shortURL].userID) {
+      thisURLS[shortURL] = urlDatabase[shortURL];
+    }
+  }
+  return thisURLS;
+};
+
 // deleted cookie upon user logout
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  //res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/');
 });
 
@@ -112,7 +130,8 @@ app.post('/login', (req, res) => {
       message: "",
       stat: res.statusCode
     };
-    res.cookie("user_id", foundUsersID);
+    //res.cookie("user_id", foundUsersID);
+    req.session.user_id = foundUsersID;
     res.redirect('/urls');
     //return;
   } else {
@@ -168,7 +187,8 @@ console.log(uPassword);
   }
 
   if (problem === false) {
-      res.cookie("user_id", randUserID);
+      //res.cookie("user_id", randUserID);
+      req.session.user_id = randUserID;
       //res.cookie("user_id", users[randUserID].id);
       users[randUserID] = {
         id: randUserID,
@@ -192,31 +212,35 @@ console.log(uPassword);
 
 });
 
-app.get('/u/:shortURL', (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(longURL);
-
-//  if (req.params.shortURL !== urlDatabase[req.params.shortURL]) {
- //   res.status(404).render('404', templateVars);
-//  };
-});
-
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[shortURL].longURL;
-  res.redirect(longURL);
+  if (req.session.user_id === urlDatabase[req.params.id].userID) {
+    let longURL = urlDatabase[shortURL].longURL;
+    res.redirect(longURL);
+  } else {
+    res.status(403).send("url not belongs to you.");
+  }
 });
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id].longURL = req.body.newURL;
-  console.log(req.body.newURL);
-  let templateVars = { urls: urlDatabase };
+        console.log(req.session.user_id);
+        console.log(urlDatabase[req.params.id].userID);
+  if (req.session.user_id === urlDatabase[req.params.id].userID) {
+      urlDatabase[req.params.id].longURL = req.body.newURL;
+      console.log(req.body.newURL);
+  }
+  //let templateVars = { urls: urlDatabase };
+  let templateVars = { urls : urlsForUser(req.session.user_id) };
   res.render("urls_index", templateVars);
   //res.render("urls");
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
-  let templateVars = { urls: urlDatabase };
+  if (req.session.user_id === urlDatabase[req.params.id].userID) {
+      delete urlDatabase[req.params.id];
+  }
+
+  //let templateVars = { urls: urlDatabase };
+  let templateVars = { urls : urlsForUser(req.session.user_id) };
   res.render("urls_index", templateVars);
   //res.render("urls");
 });
@@ -226,28 +250,39 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // debug statement to see POST parameters
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  let randShortURL = generateRandomString();
+  let longURL = `http://${req.body.longURL}`;
+
+  if (req.session.user_id) {
+    urlDatabase[randShortURL] = {
+      'longURL': longURL,
+      'userID': req.session.user_id
+    };
+    res.send("Ok");
+  }
+  else {
+    res.status(403).send("Please log in");
+  }
+  //console.log(req.body);
 });
 
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
-  // let templateVars = {
-  //   shortURL: req.params.id,
-  //   longURL: urlDatabase[req.params.shortURL]
-  // };
+  let templateVars = { urls : urlsForUser(req.session.user_id) };
   res.render("urls_index", templateVars);
-//  res.render("urls_index", urlDatabase);
 });
 
 app.get("/urls/:id", (req, res) => {
-  let templateVars =
-    //{ urls: {
-    {
-              shortURL: req.params.id,
-              longURL: urlDatabase[req.params.id].longURL
-    };
-  res.render("urls_show", templateVars);
+  if (req.session.user_id !== urlDatabase[req.params.id].userID) {
+      res.status(403).send("url not belongs to you");
+  }
+  else {
+    let templateVars =
+      {
+        shortURL: req.params.id,
+        longURL: urlDatabase[req.params.id].longURL
+      };
+    res.render("urls_show", templateVars);
+  }
 });
 
 

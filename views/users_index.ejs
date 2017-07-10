@@ -20,7 +20,7 @@
 <h2> USERS </h2>
 <ul>
     <% Object.keys(urls).forEach(function(shortURL) { %>
-        <li><%= shortURL %> - <%= urls[shortURL] %>
+        <li><%= shortURL %> - <%= urls[shortURL].longURL %>
 <form method="POST" action="/urls/<%= shortURL %>/delete" style="display: inline;">
   <button type="submit" class="btn btn-danger">Delete</button>
         </li>
