@@ -285,20 +285,9 @@ app.get("/urls/:id", (req, res) => {
   }
 });
 
-
 app.get('/', (req, res) => {
-  // this registers a handler on the ROOT path '/'
-  // if (req.session.user_id) {
-  //   res.redirect('/urls');
-  // } else {
-  let templateVars = { urls: urlDatabase };
-  res.render("urls_index", templateVars);
-//  };
+    res.redirect('/urls');
 });
-
-// app.get("/", (req, res) => {
-//   res.end("Hello!");
-// });
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
