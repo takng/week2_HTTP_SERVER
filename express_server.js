@@ -127,7 +127,8 @@ app.post('/login', (req, res) => {
       stat: res.statusCode
     };
     req.session.user_id = foundUsersID;
-    res.redirect('/urls');
+    templateVars = { urls : urlsForUser(req.session.user_id) };
+    res.render("urls_index", templateVars);
     //return;
   } else {
     if (problem === true) {
@@ -186,8 +187,8 @@ console.log(uPassword);
         email: uEmail,
         password: hashedPwd
       };
-      templateVars = { urls: users };
-      res.render("login", templateVars);
+      templateVars = { urls : urlsForUser(req.session.user_id) };
+      res.render("urls_index", templateVars);
   } else {
       if (problem === true) {
           res.statusCode = 400;
@@ -202,6 +203,9 @@ console.log(uPassword);
 });
 
 app.get("/u/:shortURL", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    res.status(403).send("url not exists.");
+  }
   if (req.session.user_id === urlDatabase[req.params.id].userID) {
     let longURL = urlDatabase[shortURL].longURL;
     res.redirect(longURL);
@@ -236,19 +240,36 @@ app.get("/urls/new", (req, res) => {
 
 app.post("/urls", (req, res) => {
   let randShortURL = generateRandomString();
-  let longURL = `http://${req.body.longURL}`;
+  //let longURL = `http://${req.body.longURL}`;
+  let longURL = req.body.longURL;
+
+  //let n1 = longURL.indexOf(":");
+  //let n2 = longURL.indexOf("//");
+
+  longURL = longURL.replace("http://", "");
+  longURL = longURL.replace("https://", "");
+
+  //longURL = "http://" + longUR
+  console.log("HERE");
+  console.log(longURL);
+  longURL = "http://" + longURL;
+  console.log(longURL);
+  //longURL = longURL.replace("https://", "");
+  //longURL = "http://" + longURL;
 
   if (req.session.user_id) {
     urlDatabase[randShortURL] = {
       'longURL': longURL,
       'userID': req.session.user_id
     };
-    res.send("Ok");
+    let templateVars = { urls : urlsForUser(req.session.user_id) };
+    res.render("urls_index", templateVars);
+    //res.send("Ok");
   }
   else {
     res.status(403).send("Please log in");
   }
-  
+
 });
 
 app.get("/urls", (req, res) => {
