@@ -6,7 +6,7 @@ var PORT = process.env.PORT || 8080;
 const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
-const password = "purple-monkey-dinosaur"; // you will probably this from req.params
+const password = "purple-monkey-dinosaur";
 const hashed_password = bcrypt.hashSync(password, 10);
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -50,10 +50,6 @@ var urlDatabase = {
     'longURL': 'http://www.google.com',
     'userID': 'user4RandomID'
   }
-  // "b3xVn3": "http://www.lighthouselabs.com",
-  // "b4xVn4": "http://www.lighthouselabs.hk",
-  // "b2xVn2": "http://www.lighthouselabs.ca",
-  // "9sm5xK": "http://www.google.com"
 };
 
 function generateRandomString() {
@@ -130,7 +126,6 @@ app.post('/login', (req, res) => {
       message: "",
       stat: res.statusCode
     };
-    //res.cookie("user_id", foundUsersID);
     req.session.user_id = foundUsersID;
     res.redirect('/urls');
     //return;
@@ -143,12 +138,10 @@ app.post('/login', (req, res) => {
         };
         res.status(403).send(problemMessage);
     };
-    //res.render('login', templateVars);
   }
 });
 
 
-// feature/user-registration
 app.get('/register', (req, res) => {
   let templateVars = { message: '', stat: res.statusCode };
   res.render('register', templateVars);
@@ -187,9 +180,7 @@ console.log(uPassword);
   }
 
   if (problem === false) {
-      //res.cookie("user_id", randUserID);
       req.session.user_id = randUserID;
-      //res.cookie("user_id", users[randUserID].id);
       users[randUserID] = {
         id: randUserID,
         email: uEmail,
@@ -197,7 +188,6 @@ console.log(uPassword);
       };
       templateVars = { urls: users };
       res.render("login", templateVars);
-      //return;
   } else {
       if (problem === true) {
           res.statusCode = 400;
@@ -207,7 +197,6 @@ console.log(uPassword);
           };
           res.status(400).send(problemMessage);
       };
-      //res.render('register', templateVars);
   }
 
 });
@@ -228,10 +217,8 @@ app.post("/urls/:id", (req, res) => {
       urlDatabase[req.params.id].longURL = req.body.newURL;
       console.log(req.body.newURL);
   }
-  //let templateVars = { urls: urlDatabase };
   let templateVars = { urls : urlsForUser(req.session.user_id) };
   res.render("urls_index", templateVars);
-  //res.render("urls");
 });
 
 app.post("/urls/:id/delete", (req, res) => {
@@ -239,10 +226,8 @@ app.post("/urls/:id/delete", (req, res) => {
       delete urlDatabase[req.params.id];
   }
 
-  //let templateVars = { urls: urlDatabase };
   let templateVars = { urls : urlsForUser(req.session.user_id) };
   res.render("urls_index", templateVars);
-  //res.render("urls");
 });
 
 app.get("/urls/new", (req, res) => {
@@ -263,7 +248,7 @@ app.post("/urls", (req, res) => {
   else {
     res.status(403).send("Please log in");
   }
-  //console.log(req.body);
+  
 });
 
 app.get("/urls", (req, res) => {
