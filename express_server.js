@@ -52,11 +52,13 @@ var urlDatabase = {
   }
 };
 
+// generate random string
 function generateRandomString() {
     let random = Math.floor((1 + Math.random()) * 0x1000000).toString(16).substring(1);
     return random;
 };
 
+// function to return urls for this user
 function urlsForUser(thisUser) {
   const thisURLS = {};
   for (let shortURL in urlDatabase) {
@@ -86,6 +88,8 @@ app.get("/list", (req, res) => {
   res.render("users_index", templateVars);
 });
 
+
+// if log in ok, display user's urls
 app.post('/login', (req, res) => {
   let uEmail = req.body.email;
   let uPassword = req.body.password;
@@ -148,7 +152,7 @@ app.get('/register', (req, res) => {
   res.render('register', templateVars);
 });
 
-
+// if register ok, display user's urls
 app.post('/register', (req, res) => {
   let randUserID = generateRandomString();
   let uEmail = req.body.email;
@@ -202,12 +206,11 @@ console.log(uPassword);
 
 });
 
-app.get("/u/:shortURL", (req, res) => {
+app.get("/u/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
     res.status(403).send("url not exists.");
-  }
-  if (req.session.user_id === urlDatabase[req.params.id].userID) {
-    let longURL = urlDatabase[shortURL].longURL;
+  } else if (req.session.user_id === urlDatabase[req.params.id].userID) {
+    let longURL = urlDatabase[req.params.id].longURL;
     res.redirect(longURL);
   } else {
     res.status(403).send("url not belongs to you.");
@@ -243,19 +246,9 @@ app.post("/urls", (req, res) => {
   //let longURL = `http://${req.body.longURL}`;
   let longURL = req.body.longURL;
 
-  //let n1 = longURL.indexOf(":");
-  //let n2 = longURL.indexOf("//");
-
   longURL = longURL.replace("http://", "");
   longURL = longURL.replace("https://", "");
-
-  //longURL = "http://" + longUR
-  console.log("HERE");
-  console.log(longURL);
   longURL = "http://" + longURL;
-  console.log(longURL);
-  //longURL = longURL.replace("https://", "");
-  //longURL = "http://" + longURL;
 
   if (req.session.user_id) {
     urlDatabase[randShortURL] = {
@@ -278,7 +271,9 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  if (req.session.user_id !== urlDatabase[req.params.id].userID) {
+  if (!urlDatabase[req.params.id]) {
+      res.status(403).send("url not exists.");
+  } else if (req.session.user_id !== urlDatabase[req.params.id].userID) {
       res.status(403).send("url not belongs to you");
   }
   else {
