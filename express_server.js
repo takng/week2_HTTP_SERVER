@@ -210,14 +210,8 @@ app.post('/register', (req, res) => {
 });
 
 app.get("/u/:id", (req, res) => {
-  if (!urlDatabase[req.params.id]) {
-    res.status(403).send("url not exists.");
-  } else {
     let longURL = urlDatabase[req.params.id].longURL;
     res.redirect(longURL);
-  }
-  //if (req.session.user_id === urlDatabase[req.params.id].userID) {
-    //res.status(403).send("url not belongs to you.");
 });
 
 app.post("/urls/:id", (req, res) => {
