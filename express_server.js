@@ -54,8 +54,8 @@ var urlDatabase = {
 
 // generate random string
 function generateRandomString() {
-    let random = Math.floor((1 + Math.random()) * 0x1000000).toString(16).substring(1);
-    return random;
+  let random = Math.floor((1 + Math.random()) * 0x1000000).toString(16).substring(1);
+  return random;
 };
 
 // function to return urls for this user
@@ -77,14 +77,14 @@ app.post('/logout', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  let templateVars = { message: '', stat: res.statusCode };
+  let templateVars = { message: '', stat: res.statusCode, user: null };
 
   res.render('login', templateVars);
 
 });
 
 app.get("/list", (req, res) => {
-  let templateVars = { urls: users };
+  let templateVars = { urls: users, user: null };
   res.render("users_index", templateVars);
 });
 
@@ -131,11 +131,15 @@ app.post('/login', (req, res) => {
       stat: res.statusCode
     };
     req.session.user_id = foundUsersID;
-    templateVars = { urls : urlsForUser(req.session.user_id) };
+    //templateVars = { urls : urlsForUser(req.session.user_id) };
+    templateVars = {
+      urls : urlsForUser(req.session.user_id),
+      user: req.session.user_id
+    };
     res.render("urls_index", templateVars);
     //return;
   } else {
-    if (problem === true) {
+    if (problem) {
         res.statusCode = 403;
         templateVars = {
           message: problemMessage,
@@ -148,7 +152,7 @@ app.post('/login', (req, res) => {
 
 
 app.get('/register', (req, res) => {
-  let templateVars = { message: '', stat: res.statusCode };
+  let templateVars = { message: '', stat: res.statusCode, user: null };
   res.render('register', templateVars);
 });
 
@@ -163,10 +167,6 @@ app.post('/register', (req, res) => {
   let problem = false;
   let problemMessage = "";
   let foundUsersID = "";
-
-console.log(randUserID);
-console.log(uEmail);
-console.log(uPassword);
 
   if (!uEmail || !uPassword) {
     console.log('Empty Input');
@@ -191,7 +191,10 @@ console.log(uPassword);
         email: uEmail,
         password: hashedPwd
       };
-      templateVars = { urls : urlsForUser(req.session.user_id) };
+      templateVars = {
+        urls : urlsForUser(req.session.user_id),
+        user: req.session.user_id
+      };
       res.render("urls_index", templateVars);
   } else {
       if (problem === true) {
@@ -209,22 +212,26 @@ console.log(uPassword);
 app.get("/u/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
     res.status(403).send("url not exists.");
-  } else if (req.session.user_id === urlDatabase[req.params.id].userID) {
+  } else {
     let longURL = urlDatabase[req.params.id].longURL;
     res.redirect(longURL);
-  } else {
-    res.status(403).send("url not belongs to you.");
   }
+  //if (req.session.user_id === urlDatabase[req.params.id].userID) {
+    //res.status(403).send("url not belongs to you.");
 });
 
 app.post("/urls/:id", (req, res) => {
-        console.log(req.session.user_id);
-        console.log(urlDatabase[req.params.id].userID);
+        //console.log(req.session.user_id);
+        //console.log(urlDatabase[req.params.id].userID);
   if (req.session.user_id === urlDatabase[req.params.id].userID) {
       urlDatabase[req.params.id].longURL = req.body.newURL;
       console.log(req.body.newURL);
   }
-  let templateVars = { urls : urlsForUser(req.session.user_id) };
+  //let templateVars = { urls : urlsForUser(req.session.user_id) };
+  let templateVars = {
+    urls : urlsForUser(req.session.user_id),
+    user: req.session.user_id
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -233,12 +240,17 @@ app.post("/urls/:id/delete", (req, res) => {
       delete urlDatabase[req.params.id];
   }
 
-  let templateVars = { urls : urlsForUser(req.session.user_id) };
+  //let templateVars = { urls : urlsForUser(req.session.user_id) };
+  let templateVars = {
+    urls : urlsForUser(req.session.user_id),
+    user: req.session.user_id
+  };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = { message: '', stat: res.statusCode, user: req.session.user_id };
+  res.render("urls_new", templateVars);
 });
 
 app.post("/urls", (req, res) => {
@@ -255,7 +267,11 @@ app.post("/urls", (req, res) => {
       'longURL': longURL,
       'userID': req.session.user_id
     };
-    let templateVars = { urls : urlsForUser(req.session.user_id) };
+    //let templateVars = { urls : urlsForUser(req.session.user_id) };
+    let templateVars = {
+      urls : urlsForUser(req.session.user_id),
+      user: req.session.user_id
+    };
     res.render("urls_index", templateVars);
     //res.send("Ok");
   }
@@ -266,7 +282,11 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  let templateVars = { urls : urlsForUser(req.session.user_id) };
+  //let templateVars = { urls : urlsForUser(req.session.user_id) };
+  let templateVars = {
+    urls : urlsForUser(req.session.user_id),
+    user: req.session.user_id
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -280,7 +300,8 @@ app.get("/urls/:id", (req, res) => {
     let templateVars =
       {
         shortURL: req.params.id,
-        longURL: urlDatabase[req.params.id].longURL
+        longURL: urlDatabase[req.params.id].longURL,
+        user: null
       };
     res.render("urls_show", templateVars);
   }
